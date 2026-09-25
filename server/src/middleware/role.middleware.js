@@ -1,6 +1,8 @@
 export const requireAdmin = (req, res, next) => {
 
-    if (req.user) {
+     console.log("REQ.USER:", req.user);
+
+    if (!req.user) {
         return res.status(401).json({
             success: false,
             message: "Authentication required",

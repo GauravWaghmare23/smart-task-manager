@@ -1,7 +1,11 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+
 import { initDb } from "./src/db/db.js";
+
+import authRouter from "./src/routes/auth.route.js";
+import taskRouter from "./src/routes/task.route.js";
 
 const app = express();
 
@@ -17,11 +21,16 @@ app.get("/health", (req, res) => {
   });
 });
 
-await initDb()
-  .then(() => console.log("DB initialized"))
-  .catch((error) => {
-    console.error(`DB error: ${error}`);
-  });
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/tasks", taskRouter);
+
+try {
+  await initDb();
+  console.log("DB initialized");
+} catch (error) {
+  console.error("DB initialization failed:", error);
+  process.exit(1);
+}
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

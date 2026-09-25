@@ -14,8 +14,8 @@ export const createTask = async ({
   }
 
   if (!priority) {
-        throw new Error("Task priority is required");
-    }
+    throw new Error("Task priority is required");
+  }
 
   const allowedPriorities = ["LOW", "MEDIUM", "HIGH"];
 
@@ -29,11 +29,13 @@ export const createTask = async ({
     throw new Error("Assigned user not found");
   }
 
-  const createdByUser = db.data.users.find((user)=>user.id === createdBy && user.role === "ADMIN");
+  const createdByUser = db.data.users.find(
+    (user) => user.id === createdBy && user.role === "ADMIN",
+  );
 
   if (!createdByUser) {
-  throw new Error("Only admin users can create tasks");
-}
+    throw new Error("Only admin users can create tasks");
+  }
 
   const checkAllDependenciesExists = dependencies.every((dependencyId) => {
     return db.data.tasks.some((task) => task.id === dependencyId);
@@ -63,18 +65,58 @@ export const createTask = async ({
   return task;
 };
 
-export const getTasks = async (userId) => {
+export const getTasks = async (userId, filters = {}) => {
   if (!userId) {
     throw new Error("User Id is required.");
   }
 
-  const tasks = db.data.tasks.filter((task) => task.assignedTo === userId);
+  const { priority, status } = filters;
+
+  let tasks = db.data.tasks.filter((task) => task.assignedTo === userId);
+
+  if (priority) {
+    tasks = tasks.filter((task) => task.priority === priority);
+  }
+
+  if (status) {
+    tasks = tasks.filter((task) => task.status === status);
+  }
 
   return tasks;
 };
 
-export const getAllTasks = async () => {
-  return db.data.tasks;
+export const getAllTasks = async (filters = {}) => {
+  const { priority, status } = filters;
+
+  let tasks = db.data.tasks;
+
+  if (priority) {
+    tasks = tasks.filter((task) => task.priority === priority);
+  }
+
+  if (status) {
+    tasks = tasks.filter((task) => task.status === status);
+  }
+
+  return tasks;
+};
+
+export const getTaskById = async (taskId, user) => {
+  if (!taskId) {
+    throw new Error("Task ID is required");
+  }
+
+  const task = db.data.tasks.find((task) => task.id === taskId);
+
+  if (!task) {
+    throw new Error("Task not found");
+  }
+
+  if (user.role !== "ADMIN" && user.userId !== task.assignedTo) {
+    throw new Error("You are not allowed to view this task");
+  }
+
+  return task;
 };
 
 export const deleteTask = async (taskId) => {
@@ -88,6 +130,14 @@ export const deleteTask = async (taskId) => {
     throw new Error("Task not found");
   }
 
+  const dependentTask = db.data.tasks.find((task) =>
+    task.dependencies.includes(taskId),
+  );
+
+  if (dependentTask) {
+    throw new Error("Cannot delete task because another task depends on it");
+  }
+
   db.data.tasks = db.data.tasks.filter((task) => task.id !== taskId);
 
   await db.write();
@@ -95,7 +145,7 @@ export const deleteTask = async (taskId) => {
   return existingTask;
 };
 
-export const updateStatus = async (taskId, status) => {
+export const updateStatus = async (taskId, status, user) => {
   if (!taskId) {
     throw new Error("Task ID is required.");
   }
@@ -114,6 +164,10 @@ export const updateStatus = async (taskId, status) => {
 
   if (!task) {
     throw new Error("Task not found");
+  }
+
+  if (user.role !== "ADMIN" && task.assignedTo !== user.userId) {
+    throw new Error("You are not allowed to update this task");
   }
 
   if (status === "DONE") {

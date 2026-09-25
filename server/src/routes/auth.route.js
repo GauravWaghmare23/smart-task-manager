@@ -1,14 +1,22 @@
 import express from "express";
+
+import {
+  createUser,
+  getCurrentUser,
+  getUsers,
+  loginUser,
+  removeUser,
+} from "../controller/auth.controller.js";
+
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { requireAdmin } from "../middleware/role.middleware.js";
-import { createUser, getCurrentUser, getUsers, loginUser, removeUser } from "../controller/auth.controller.js";
 
 const authRouter = express.Router();
 
-authRouter.post("/create-users",authMiddleware,requireAdmin,createUser);
-authRouter.post("/login",loginUser);
-authRouter.get("/me",authMiddleware,getCurrentUser);
+authRouter.post("/login", loginUser);
+authRouter.post("/users", authMiddleware, requireAdmin, createUser);
+authRouter.get("/me", authMiddleware, getCurrentUser);
 authRouter.get("/users", authMiddleware, requireAdmin, getUsers);
-authRouter.delete("/users/:id",authMiddleware,requireAdmin,removeUser);
+authRouter.delete("/users/:id", authMiddleware, requireAdmin, removeUser);
 
 export default authRouter;
