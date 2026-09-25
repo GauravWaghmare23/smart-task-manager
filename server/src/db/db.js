@@ -4,19 +4,17 @@ import { JSONFile } from "lowdb/node";
 const adapter = new JSONFile("./src/data/db.json");
 
 export const db = new Low(adapter, {
-  users: [],
-  tasks: [],
-  sessions: [],
+    users: [],
+    tasks: []
 });
 
 export async function initDb() {
-  await db.read();
+    await db.read();
 
-  db.data ||= {
-    users: [],
-    tasks: [],
-    sessions: [],
-  };
+    db.data ||= {
+        users: [],
+        tasks: []
+    };
 
-  await db.write();
+    await db.write();
 }

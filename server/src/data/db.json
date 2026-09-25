@@ -1,5 +1,12 @@
 {
-  "users": [],
-  "tasks": [],
-  "sessions": []
+  "users": [
+    {
+      "id": "admin-001",
+      "name": "System Admin",
+      "email": "admin@example.com",
+      "password": "admin123",
+      "role": "ADMIN"
+    }
+  ],
+  "tasks": []
 }

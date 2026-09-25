@@ -2,68 +2,103 @@ import { randomUUID } from "node:crypto";
 import { db } from "../db/db.js";
 
 export const addUser = async (name, email, password) => {
-  if (!name || !email || !password) {
-    throw new Error("All fields are required");
-  }
 
-  const existingUser = db.data.users.find((user) => user.email === email);
+    if (!name || !email || !password) {
+        throw new Error("All fields are required");
+    }
 
-  if (existingUser) {
-    throw new Error("Email already exists");
-  }
+    const existingUser = db.data.users.find((user) => user.email === email);
 
-  const user = {
-    id: randomUUID(),
-    name,
-    email,
-    password,
-  };
+    if (existingUser) {
+        throw new Error("Email already exists");
+    }
 
-  db.data.users.push(user);
+    const user = {
+        id: randomUUID(),
+        name,
+        email,
+        password,
+        role: "USER",
+    };
 
-  await db.write();
+    db.data.users.push(user);
 
-  return user;
+    await db.write();
+
+    return user;
 };
 
 export const findUser = async (email, password) => {
-  if (!email || !password) {
-    throw new Error("All fields are required");
-  }
 
-  const existingUser = db.data.users.find((user) => user.email === email);
+    if (!email || !password) {
+        throw new Error("All fields are required");
+    }
 
-  if (!existingUser) {
-    throw new Error("Email doesn't exist. Please create a user");
-  }
+    const existingUser = db.data.users.find((user) => user.email === email);
 
-  if (existingUser.password !== password) {
-    throw new Error("Invalid email or password");
-  }
+    if (!existingUser) {
+        throw new Error("Invalid email or password");
+    }
 
-  return existingUser;
+    if (existingUser.password !== password) {
+        throw new Error("Invalid email or password");
+    }
+
+    return existingUser;
+};
+
+export const getUserById = async (userId) => {
+
+    if (!userId) {
+        throw new Error("User ID is required");
+    }
+
+    const user = db.data.users.find((user) => user.id === userId);
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    return user;
+};
+
+export const getAllUsers = async () => {
+
+    return db.data.users;
+
 };
 
 export const deleteUser = async (userId) => {
-  if (!userId) {
-    throw new Error("User ID is required");
-  }
+    
+    if (!userId) {
+        throw new Error("User ID is required");
+    }
 
-  const existingUser = db.data.users.find((user) => user.id === userId);
+    const existingUser = db.data.users.find((user) => user.id === userId);
 
-  if (!existingUser) {
-    throw new Error("User not found");
-  }
+    if (!existingUser) {
+        throw new Error("User not found");
+    }
 
-  const existingTask = db.data.tasks.find((task) => task.assignedTo === userId);
+    const existingTask = db.data.tasks.find((task) => task.assignedTo === userId);
 
-  if (existingTask) {
-    throw new Error("Cannot delete user with assigned tasks");
-  }
+    if (existingTask) {
+        throw new Error("Cannot delete user with assigned tasks");
+    }
 
-  db.data.users = db.data.users.filter((user) => user.id !== userId);
+    if (existingUser.role === "ADMIN") {
+        const adminCount = db.data.users.filter(
+            (user) => user.role === "ADMIN",
+        ).length;
 
-  await db.write();
+        if (adminCount <= 1) {
+            throw new Error("Cannot delete the only admin");
+        }
+    }
 
-  return existingUser;
+    db.data.users = db.data.users.filter((user) => user.id !== userId);
+
+    await db.write();
+
+    return existingUser;
 };
