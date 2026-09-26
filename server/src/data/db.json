@@ -3,7 +3,7 @@
     {
       "id": "admin-001",
       "name": "System Admin",
-      "email": "admin@example.com",
+      "email": "admin@gmail.com",
       "password": "admin123",
       "role": "ADMIN"
     }
